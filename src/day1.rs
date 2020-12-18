@@ -1,4 +1,4 @@
-use crate::expense_report::find_2020_sum_and_mul;
+use crate::expense_report::*;
 
 #[aoc_generator(day1)]
 pub fn input_generator(input: &str) -> Vec<u64> {
@@ -11,6 +11,10 @@ pub fn input_generator(input: &str) -> Vec<u64> {
 
 #[aoc(day1, part1)]
 pub fn part1(entries: &[u64]) -> u64 {
-    find_2020_sum_and_mul(entries).expect("Not found!")
+    find_2020_2_sum_and_mul(entries).expect("Not found!")
 }
 
+#[aoc(day1, part2)]
+pub fn part2(entries: &[u64]) -> u64 {
+    find_2020_3_sum_and_mul(entries).expect("Not found!")
+}
