@@ -25,194 +25,56 @@ impl MapSegment {
     }
 }
 
-#[derive(PartialEq, Debug)]
-enum TobogganStep {
-    Start,
-    Right1,
-    Right2,
-    Right3,
-    Right4,
-    Right5,
-    Right6,
-    Right7,
-    Down1,
-    Down2,
-}
-#[derive(PartialEq, Debug)]
-pub enum TobogganSlope {
-    Right1Down1,
-    Right3Down1,
-    Right5Down1,
-    Right7Down1,
-    Right1Down2,
+pub enum TobogganDir {
+    Right,
+    Down,
 }
 
-#[derive(PartialEq, Debug)]
-struct Toboggan {
+pub struct TobogganTraveler {
+    path: Vec<TobogganDir>,
+    next: usize,
     x: usize,
     y: usize,
-    slope: TobogganSlope,
-    next_step: TobogganStep,
+    first: bool,
 }
 
-impl Toboggan {
-    fn new(slope: TobogganSlope) -> Toboggan {
-        Toboggan {
+impl TobogganTraveler {
+    pub fn new(path: Vec<TobogganDir>) -> TobogganTraveler {
+        TobogganTraveler {
+            path,
+            next: 0,
             x: 0,
             y: 0,
-            slope,
-            next_step: TobogganStep::Start,
+            first: true,
         }
     }
 }
 
-impl Iterator for Toboggan {
+impl Iterator for TobogganTraveler {
     type Item = (usize, usize, bool);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut touched = false;
+        let mut hit = false;
 
-        match self.slope {
-            TobogganSlope::Right1Down1 => {
-                match self.next_step {
-                    TobogganStep::Start => {
-                        self.next_step = TobogganStep::Right1;
-                    },
-                    TobogganStep::Right1 => {
-                        self.next_step = TobogganStep::Down1;
-                        self.x += 1;
-                    },
-                    TobogganStep::Down1 => {
-                        self.next_step = TobogganStep::Right1;
-                        self.y += 1;
-                        touched = true;
-                    },
-                    _ => panic!("Invalid state"),
-                }
+        if !self.first {
+            let next = self.path.get(self.next).unwrap();
+
+            if self.path.len() - 1 == self.next {
+                hit = true;
+                self.next = 0;
+            } else {
+                self.next += 1;
             }
-            TobogganSlope::Right3Down1 => {
-                match self.next_step {
-                    TobogganStep::Start => {
-                        self.next_step = TobogganStep::Right1;
-                    }
-                    TobogganStep::Right1 => {
-                        self.next_step = TobogganStep::Right2;
-                        self.x += 1;
-                    }
-                    TobogganStep::Right2 => {
-                        self.next_step = TobogganStep::Right3;
-                        self.x += 1;
-                    }
-                    TobogganStep::Right3 => {
-                        self.next_step = TobogganStep::Down1;
-                        self.x += 1;
-                    }
-                    TobogganStep::Down1 => {
-                        self.next_step = TobogganStep::Right1;
-                        self.y += 1;
-                        touched = true;
-                    },
-                    _ => panic!("Invalid state"),
-                }
+
+            match next {
+                TobogganDir::Right => { self.x += 1; }
+                TobogganDir::Down => { self.y += 1; }
             }
-            TobogganSlope::Right5Down1 => {
-                match self.next_step {
-                    TobogganStep::Start => {
-                        self.next_step = TobogganStep::Right1;
-                    }
-                    TobogganStep::Right1 => {
-                        self.next_step = TobogganStep::Right2;
-                        self.x += 1;
-                    }
-                    TobogganStep::Right2 => {
-                        self.next_step = TobogganStep::Right3;
-                        self.x += 1;
-                    }
-                    TobogganStep::Right3 => {
-                        self.next_step = TobogganStep::Right4;
-                        self.x += 1;
-                    }
-                    TobogganStep::Right4 => {
-                        self.next_step = TobogganStep::Right5;
-                        self.x += 1;
-                    }
-                    TobogganStep::Right5 => {
-                        self.next_step = TobogganStep::Down1;
-                        self.x += 1;
-                    }
-                    TobogganStep::Down1 => {
-                        self.next_step = TobogganStep::Right1;
-                        self.y += 1;
-                        touched = true;
-                    },
-                    _ => panic!("Invalid state"),
-                }
-            }
-            TobogganSlope::Right7Down1 => {
-                match self.next_step {
-                    TobogganStep::Start => {
-                        self.next_step = TobogganStep::Right1;
-                    }
-                    TobogganStep::Right1 => {
-                        self.next_step = TobogganStep::Right2;
-                        self.x += 1;
-                    }
-                    TobogganStep::Right2 => {
-                        self.next_step = TobogganStep::Right3;
-                        self.x += 1;
-                    }
-                    TobogganStep::Right3 => {
-                        self.next_step = TobogganStep::Right4;
-                        self.x += 1;
-                    }
-                    TobogganStep::Right4 => {
-                        self.next_step = TobogganStep::Right5;
-                        self.x += 1;
-                    }
-                    TobogganStep::Right5 => {
-                        self.next_step = TobogganStep::Right6;
-                        self.x += 1;
-                    }
-                    TobogganStep::Right6 => {
-                        self.next_step = TobogganStep::Right7;
-                        self.x += 1;
-                    }
-                    TobogganStep::Right7 => {
-                        self.next_step = TobogganStep::Down1;
-                        self.x += 1;
-                    }
-                    TobogganStep::Down1 => {
-                        self.next_step = TobogganStep::Right1;
-                        self.y += 1;
-                        touched = true;
-                    },
-                    _ => panic!("Invalid state"),
-                }
-            }
-            TobogganSlope::Right1Down2 => {
-                match self.next_step {
-                    TobogganStep::Start => {
-                        self.next_step = TobogganStep::Right1;
-                    }
-                    TobogganStep::Right1 => {
-                        self.next_step = TobogganStep::Down1;
-                        self.x += 1;
-                    }
-                    TobogganStep::Down1 => {
-                        self.next_step = TobogganStep::Down2;
-                        self.y += 1;
-                    },
-                    TobogganStep::Down2 => {
-                        self.next_step = TobogganStep::Right1;
-                        self.y += 1;
-                        touched = true;
-                    },
-                    _ => panic!("Invalid state"),
-                }
-            }
+        } else {
+            self.first = false;
         }
 
-        Some((self.x, self.y, touched))
+        Some((self.x, self.y, hit))
     }
 }
 
@@ -236,11 +98,10 @@ impl Map {
         Some(self.segments.get(y).unwrap().probe(x))
     }
 
-    pub fn count_trees_by_toboggan(&self, slope: TobogganSlope) -> u64 {
-        let toboggan = Toboggan::new(slope);
+    pub fn count_trees_by_traveler(&self, traveler: TobogganTraveler) -> u64 {
         let mut trees = 0;
 
-        for (x, y, touched) in toboggan {
+        for (x, y, touched) in traveler {
             if y == self.segments.len() {
                 break;
             }
@@ -280,10 +141,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_toboggan_right_3_down_1() {
-        let toboggan = Toboggan::new(TobogganSlope::Right3Down1);
+    fn test_traveller() {
+        let traveler = TobogganTraveler::new(vec![
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Down,
+        ]);
 
-        let steps: Vec<(usize, usize, bool)> = toboggan.take(10).collect();
+        let steps: Vec<(usize, usize, bool)> = traveler.take(10).collect();
 
         let v = vec![
             (0, 0, false),
@@ -336,10 +202,38 @@ mod tests {
 
         let map = Map::from_segments(input.lines().map(|line| MapSegment::from_line(line)).collect());
 
-        assert_eq!(map.count_trees_by_toboggan(TobogganSlope::Right1Down1), 2);
-        assert_eq!(map.count_trees_by_toboggan(TobogganSlope::Right3Down1), 7);
-        assert_eq!(map.count_trees_by_toboggan(TobogganSlope::Right5Down1), 3);
-        assert_eq!(map.count_trees_by_toboggan(TobogganSlope::Right7Down1), 4);
-        assert_eq!(map.count_trees_by_toboggan(TobogganSlope::Right1Down2), 2);
+        assert_eq!(map.count_trees_by_traveler(TobogganTraveler::new(vec![
+            TobogganDir::Right,
+            TobogganDir::Down,
+        ])), 2);
+        assert_eq!(map.count_trees_by_traveler(TobogganTraveler::new(vec![
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Down,
+        ])), 7);
+        assert_eq!(map.count_trees_by_traveler(TobogganTraveler::new(vec![
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Down,
+        ])), 3);
+        assert_eq!(map.count_trees_by_traveler(TobogganTraveler::new(vec![
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Right,
+            TobogganDir::Down,
+        ])), 4);
+        assert_eq!(map.count_trees_by_traveler(TobogganTraveler::new(vec![
+            TobogganDir::Right,
+            TobogganDir::Down,
+            TobogganDir::Down,
+        ])), 2);
     }
 }
