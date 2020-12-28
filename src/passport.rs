@@ -51,14 +51,14 @@ pub enum Height {
     Unknown,
 }
 
-impl Height {
-    pub fn from_str(height: &str) -> Result<Height> {
+impl From<&str> for Height {
+    fn from(height: &str) -> Self {
         if height.ends_with(&"cm") {
-            Ok(Height::Cm(height[0..height.len() - 2].parse::<u8>()?))
+            Height::Cm(height[0..height.len() - 2].parse::<u8>().unwrap())
         } else if height.ends_with(&"in") {
-            Ok(Height::Inch(height[0..height.len() - 2].parse::<u8>()?))
+            Height::Inch(height[0..height.len() - 2].parse::<u8>().unwrap())
         } else {
-            Ok(Height::Unknown)
+            Height::Unknown
         }
     }
 }
@@ -78,8 +78,8 @@ pub struct HairColor {
     color: String,
 }
 
-impl HairColor {
-    pub fn from_str(hair_color: &str) -> HairColor {
+impl From<&str> for HairColor {
+    fn from(hair_color: &str) -> HairColor {
         HairColor { color: hair_color.to_string() }
     }
 }
@@ -97,11 +97,10 @@ pub struct EyeColor {
     color: String,
 }
 
-impl EyeColor {
-    pub fn from_str(color: &str) -> EyeColor {
+impl From<&str> for EyeColor {
+    fn from(color: &str) -> EyeColor {
         EyeColor { color: color.to_string() }
     }
-
 }
 
 impl Validate for EyeColor {
@@ -124,8 +123,8 @@ struct PassportId {
     id: String,
 }
 
-impl PassportId {
-    pub fn from_str(id: &str) -> PassportId {
+impl From<&str> for PassportId {
+    fn from(id: &str) -> PassportId {
         PassportId { id: id.to_string() }
     }
 }
@@ -143,8 +142,8 @@ struct CountryId {
     id: String,
 }
 
-impl CountryId {
-    pub fn from_str(id: &str) -> CountryId {
+impl From<&str> for CountryId {
+    fn from(id: &str) -> CountryId {
         CountryId { id: id.to_string() }
     }
 }
@@ -180,17 +179,17 @@ impl Passport {
 
         for entry in line.split(' ') {
             let parts: Vec<&str> = entry.split(':').collect();
-            let part1 = parts.get(1).unwrap();
+            let part1 = *parts.get(1).unwrap();
 
             match parts.get(0) {
                 Some(&"byr") => { birth_year = Some(Year::birth_year_from_str(part1)?); },
                 Some(&"iyr") => { issue_year = Some(Year::issue_year_from_str(part1)?); },
                 Some(&"eyr") => { expiration_year = Some(Year::exp_year_from_str(part1)?); },
-                Some(&"hgt") => { height = Some(Height::from_str(part1)?); },
-                Some(&"hcl") => { hair_color = Some(HairColor::from_str(part1)); },
-                Some(&"ecl") => { eye_color = Some(EyeColor::from_str(part1)); },
-                Some(&"pid") => { passport_id = Some(PassportId::from_str(part1)); },
-                Some(&"cid") => { country_id = Some(CountryId::from_str(part1)); },
+                Some(&"hgt") => { height = Some(Height::from(part1)); },
+                Some(&"hcl") => { hair_color = Some(HairColor::from(part1)); },
+                Some(&"ecl") => { eye_color = Some(EyeColor::from(part1)); },
+                Some(&"pid") => { passport_id = Some(PassportId::from(part1)); },
+                Some(&"cid") => { country_id = Some(CountryId::from(part1)); },
                 _ => {
                     bail!("Invalid property: {}", part1);
                 },
@@ -242,11 +241,11 @@ mod tests {
             birth_year: Some(Year::birth_year_from_str(&"1937").unwrap()),
             issue_year: Some(Year::issue_year_from_str(&"2017").unwrap()),
             expiration_year: Some(Year::exp_year_from_str(&"2020").unwrap()),
-            height: Some(Height::from_str(&"183cm").unwrap()),
+            height: Some(Height::from(&"183cm").unwrap()),
             hair_color: Some(HairColor::from_str(&"#fffffd")),
-            eye_color: Some(EyeColor::from_str(&"gry")),
-            passport_id: Some(PassportId::from_str(&"860033327")),
-            country_id: Some(CountryId::from_str(&"147")),
+            eye_color: Some(EyeColor::from(&"gry")),
+            passport_id: Some(PassportId::from(&"860033327")),
+            country_id: Some(CountryId::from(&"147")),
         });
 
         assert!(p.validate_according_to_first_part());
