@@ -8,10 +8,12 @@ pub mod expense_report;
 pub mod password;
 pub mod map;
 pub mod passport;
+pub mod boarding;
 
 pub mod day1;
 pub mod day2;
 pub mod day3;
 pub mod day4;
+pub mod day5;
 
 aoc_lib!{ year = 2020 }

@@ -241,11 +241,11 @@ mod tests {
             birth_year: Some(Year::birth_year_from_str(&"1937").unwrap()),
             issue_year: Some(Year::issue_year_from_str(&"2017").unwrap()),
             expiration_year: Some(Year::exp_year_from_str(&"2020").unwrap()),
-            height: Some(Height::from(&"183cm").unwrap()),
-            hair_color: Some(HairColor::from_str(&"#fffffd")),
-            eye_color: Some(EyeColor::from(&"gry")),
-            passport_id: Some(PassportId::from(&"860033327")),
-            country_id: Some(CountryId::from(&"147")),
+            height: Some(Height::from("183cm")),
+            hair_color: Some(HairColor::from("#fffffd")),
+            eye_color: Some(EyeColor::from("gry")),
+            passport_id: Some(PassportId::from("860033327")),
+            country_id: Some(CountryId::from("147")),
         });
 
         assert!(p.validate_according_to_first_part());
