@@ -22,5 +22,14 @@ pub fn input_generator(input: &str) -> Vec<Group> {
 pub fn part1(groups: &[Group]) -> u64 {
     groups
         .iter()
-        .fold(0, |acc, g| acc + g.count_questions())
+        .fold(0, |acc, g| acc + g.count_yes_questions())
+}
+
+#[aoc(day6, part2)]
+pub fn part2(groups: &[Group]) -> u64 {
+    groups
+        .iter()
+        .fold(0, |acc, g| {
+            acc + g.count_all_yes_questions()
+        })
 }
