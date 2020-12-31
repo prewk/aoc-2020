@@ -35,7 +35,7 @@ pub fn input_str_to_hash_map(input: &str) -> HashMap<String, HashMap<String, u64
     output
 }
 
-pub fn find_carrier_bag_count(bags: &HashMap<String, HashMap<String, u64>>, query: &str, indent: usize) -> HashSet<String> {
+pub fn find_carrier_bags(bags: &HashMap<String, HashMap<String, u64>>, query: &str) -> HashSet<String> {
     let mut output = HashSet::new();
 
     for (name, content) in bags {
@@ -45,7 +45,7 @@ pub fn find_carrier_bag_count(bags: &HashMap<String, HashMap<String, u64>>, quer
             output.insert(name.clone());
 
             // Find all bags that contain this bag
-            for deeper in find_carrier_bag_count(bags, name, indent + 1) {
+            for deeper in find_carrier_bags(bags, name) {
                 output.insert(deeper.clone());
             }
         }
@@ -54,12 +54,23 @@ pub fn find_carrier_bag_count(bags: &HashMap<String, HashMap<String, u64>>, quer
     output
 }
 
+pub fn find_content_count(bags: &HashMap<String, HashMap<String, u64>>, query: &str, start: u64) -> u64 {
+    let mut all = start;
+    let inners = bags.get(query).unwrap();
+
+    for (name, count) in inners {
+        all += count * find_content_count(bags, name, 1);
+    }
+
+    all
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_find_carrier_bag_count() {
+    fn test_find_carrier_bags() {
         let input = "light red bags contain 1 bright white bag, 2 muted yellow bags.\n\
                            dark orange bags contain 3 bright white bags, 4 muted yellow bags.\n\
                            bright white bags contain 1 shiny gold bag.\n\
@@ -72,6 +83,21 @@ mod tests {
 
         let bags = input_str_to_hash_map(input);
 
-        assert_eq!(find_carrier_bag_count(&bags, "shiny gold bag", 0).len(), 4);
+        assert_eq!(find_carrier_bags(&bags, "shiny gold bag").len(), 4);
+    }
+
+    #[test]
+    fn test_find_content_count() {
+        let input = "shiny gold bags contain 2 dark red bags.\n\
+                           dark red bags contain 2 dark orange bags.\n\
+                           dark orange bags contain 2 dark yellow bags.\n\
+                           dark yellow bags contain 2 dark green bags.\n\
+                           dark green bags contain 2 dark blue bags.\n\
+                           dark blue bags contain 2 dark violet bags.\n\
+                           dark violet bags contain no other bags.";
+
+        let bags = input_str_to_hash_map(input);
+
+        assert_eq!(find_content_count(&bags, "shiny gold bag", 0), 126);
     }
 }
