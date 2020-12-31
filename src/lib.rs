@@ -10,6 +10,7 @@ pub mod map;
 pub mod passport;
 pub mod boarding;
 pub mod customs;
+pub mod bags;
 
 pub mod day1;
 pub mod day2;
@@ -17,5 +18,6 @@ pub mod day3;
 pub mod day4;
 pub mod day5;
 pub mod day6;
+pub mod day7;
 
 aoc_lib!{ year = 2020 }
