@@ -11,6 +11,7 @@ pub mod passport;
 pub mod boarding;
 pub mod customs;
 pub mod bags;
+pub mod game_console;
 
 pub mod day1;
 pub mod day2;
