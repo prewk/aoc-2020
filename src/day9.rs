@@ -1,5 +1,5 @@
 use anyhow::{Result, bail};
-use crate::xmas::test_number;
+use crate::xmas::{test_number, find_weakness};
 
 #[aoc_generator(day9)]
 pub fn input_generator(input: &str) -> Vec<u64> {
@@ -18,4 +18,9 @@ pub fn part1(all: &[u64]) -> Result<u64> {
     }
 
     bail!("No number found")
+}
+
+#[aoc(day9, part2)]
+pub fn part2(all: &[u64]) -> Result<u64> {
+    return find_weakness(all, part1(all).unwrap());
 }

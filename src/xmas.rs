@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 
 pub fn test_number(all: &[u64], subject_index: usize) -> Result<bool> {
     if subject_index < 25 {
@@ -22,4 +22,46 @@ pub fn test_number(all: &[u64], subject_index: usize) -> Result<bool> {
     }
 
     Ok(false)
+}
+
+pub fn find_weakness(all: &[u64], invalid: u64) -> Result<u64> {
+    for (i, a) in all.iter().enumerate() {
+        let mut sum = *a;
+        let mut smallest: Option<u64> = None;
+        let mut largest: Option<u64> = None;
+        for b in all.iter().skip(i + 1) {
+            smallest = match smallest {
+                None => Some(*b),
+                Some(v) => {
+                    if v < *b {
+                        Some(v)
+                    } else {
+                        Some(*b)
+                    }
+                }
+            };
+            largest = match largest {
+                None => Some(*b),
+                Some(v) => {
+                    if v > *b {
+                        Some(v)
+                    } else {
+                        Some(*b)
+                    }
+                }
+            };
+            sum += *b;
+
+            if sum == invalid {
+                let sm = smallest.unwrap();
+                let la = largest.unwrap();
+
+                return Ok(sm + la);
+            } else if sum > invalid {
+                break;
+            }
+        }
+    }
+
+    bail!("Didn't find the sequence")
 }
