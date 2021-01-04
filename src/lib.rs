@@ -13,6 +13,7 @@ pub mod customs;
 pub mod bags;
 pub mod game_console;
 pub mod xmas;
+pub mod jolts;
 
 pub mod day1;
 pub mod day2;
@@ -23,5 +24,6 @@ pub mod day6;
 pub mod day7;
 pub mod day8;
 pub mod day9;
+pub mod day10;
 
 aoc_lib!{ year = 2020 }

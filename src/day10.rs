@@ -1,0 +1,17 @@
+use anyhow::Result;
+use crate::jolts::find_jolt_differences;
+
+#[aoc_generator(day10)]
+pub fn input_generator(input: &str) -> Vec<u64> {
+    input
+        .lines()
+        .map(|l| l.parse::<u64>().unwrap())
+        .collect()
+}
+
+#[aoc(day10, part1)]
+pub fn part1(adapters: &[u64]) -> u64 {
+    let map = find_jolt_differences(&mut adapters.iter().map(|i| *i).collect()).unwrap();
+
+    *map.get(&1).unwrap() * *map.get(&3).unwrap()
+}
