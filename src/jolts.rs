@@ -1,16 +1,16 @@
 use std::collections::HashMap;
 use anyhow::{Result, Context};
 
-pub fn find_jolt_differences(jolts: &mut Vec<u64>) -> Result<HashMap<u64, u64>> {
-    jolts.sort();
-    jolts.insert(0, 0);
+pub fn find_jolt_differences(adapters: &mut Vec<u64>) -> Result<HashMap<u64, u64>> {
+    adapters.sort();
+    adapters.insert(0, 0);
 
-    let max = *jolts.iter().max().context("Found no max")?;
+    let max = *adapters.iter().max().context("Found no max")?;
     let mut diffs = HashMap::new();
-    jolts.push(max + 3);
+    adapters.push(max + 3);
 
-    for (i, jolt) in jolts.iter().enumerate() {
-        if let Some(next) = jolts.get(i + 1) {
+    for (i, jolt) in adapters.iter().enumerate() {
+        if let Some(next) = adapters.get(i + 1) {
             let diff = next - jolt;
 
             if let Some(_) = diffs.get(&diff) {
@@ -22,6 +22,19 @@ pub fn find_jolt_differences(jolts: &mut Vec<u64>) -> Result<HashMap<u64, u64>> 
     }
 
     Ok(diffs)
+}
+
+fn simplify_adapters(adapters: &Vec<u64>) -> Result<Option<Vec64>> {
+    let mut simplified = vec![];
+
+    for (i, adapter) in adapters.iter().enumerate() {
+
+    }
+
+    match simplified.len() == adapters.len() {
+        true => Ok(None),
+        false => Ok(Some(simplified)),
+    }
 }
 
 #[cfg(test)]
