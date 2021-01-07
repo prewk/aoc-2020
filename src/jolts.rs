@@ -35,14 +35,21 @@ pub fn try_chain(adapters: &Vec<u64>) -> bool {
 pub fn find_variations(adapters: &Vec<u64>) -> Vec<Vec<u64>> {
     let mut works = vec![];
 
+    if adapters.len() < 3 {
+        return works;
+    }
+
     for (i, _) in adapters.iter().enumerate().skip(1).take(adapters.len() - 2) {
-        let variation: Vec<u64> = adapters
+        let mut variation: Vec<u64> = adapters
             .iter()
             .enumerate()
             .skip(1)
             .skip_while(|(ii, _)| *ii == i)
             .map(|(_, a)| *a)
             .collect();
+
+        variation.insert(0, 0);
+        variation.push(*variation.iter().max().unwrap() + 3);
 
         if try_chain(&variation) {
             for variated_variation in find_variations(&variation) {
