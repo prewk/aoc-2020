@@ -43,9 +43,25 @@ impl From<&str> for Room {
     }
 }
 
+pub struct Adjacent {
+    up: Option<State>,
+    up_right: Option<State>,
+    right: Option<State>,
+    down_right: Option<State>,
+    down: Option<State>,
+    down_left: Option<State>,
+    left: Option<State>,
+    up_left: Option<State>,
+}
+
 impl Room {
-    pub fn get(&self, x: usize, y: usize) -> Option<&State> {
-        self.coords.get(y * self.width + x)
+    pub fn get(&self, x: usize, y: usize) -> Option<State> {
+        self.coords.get(y * self.width + x).map(|state| state.clone())
+    }
+    pub fn get_adjacent(&self, x: usize, y: usize) -> Adjacent {
+        Adjacent {
+            up: self.get(x, y - 1),
+        }
     }
 }
 
@@ -68,7 +84,7 @@ mod tests {
 
         let room = Room::from(input);
 
-        assert_eq!(room.get(1, 1), Some(&State::Empty));
-        assert_eq!(room.get(7, 1), Some(&State::Floor));
+        assert_eq!(room.get(1, 1), Some(State::Empty));
+        assert_eq!(room.get(7, 1), Some(State::Floor));
     }
 }
