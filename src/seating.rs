@@ -19,7 +19,7 @@ impl From<char> for State {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialOrd, PartialEq)]
 pub struct Adjacent {
     up: Option<State>,
     up_right: Option<State>,
@@ -52,7 +52,7 @@ impl Adjacent {
             })
     }
 
-    fn are_4_or_more_occupied(&self) -> bool {
+    fn are_n_or_more_occupied(&self, n: usize) -> bool {
         vec![
             self.up,
             self.up_right,
@@ -72,17 +72,31 @@ impl Adjacent {
                 }
             })
             .count()
-            >= 4
+            >= n
     }
 
-    pub fn tick(&self, seat: &State) -> State {
+    pub fn tick_part1(&self, seat: &State) -> State {
         match seat {
             State::Floor => State::Floor,
             State::Empty => match self.are_all_unoccupied() {
                 true => State::Occupied,
                 false => State::Empty,
             }
-            State::Occupied => match self.are_4_or_more_occupied() {
+            State::Occupied => match self.are_n_or_more_occupied(4) {
+                true => State::Empty,
+                false => State::Occupied,
+            }
+        }
+    }
+
+    pub fn tick_part2(&self, seat: &State) -> State {
+        match seat {
+            State::Floor => State::Floor,
+            State::Empty => match self.are_all_unoccupied() {
+                true => State::Occupied,
+                false => State::Empty,
+            }
+            State::Occupied => match self.are_n_or_more_occupied(5) {
                 true => State::Empty,
                 false => State::Occupied,
             }
@@ -160,7 +174,7 @@ impl Room {
             .map(|state| state.clone())
     }
 
-    pub fn get_adjacent(&self, x: usize, y: usize) -> Adjacent {
+    pub fn get_immediately_adjacent(&self, x: usize, y: usize) -> Adjacent {
         Adjacent {
             up: match y == 0 { true => None, false => self.get(x, y - 1) },
             up_right: match x >= (self.width - 1) || y == 0 { true => None, false => self.get(x + 1, y - 1) },
@@ -173,13 +187,68 @@ impl Room {
         }
     }
 
-    pub fn tick(&self) -> Result<Room> {
+    fn trace(&self, x: usize, y: usize, walker: &dyn Fn((usize, usize)) -> Option<(usize, usize)>) -> Option<State> {
+        self
+            .get(x, y)
+            .and_then(|_| {
+                let mut x_travel = x;
+                let mut y_travel = y;
+
+                loop {
+                    if let Some((next_x, next_y)) = walker((x_travel, y_travel)) {
+                        match self.get(next_x, next_y) {
+                            None => { return None; },
+                            Some(State::Empty) => { return Some(State::Empty); },
+                            Some(State::Occupied) => { return Some(State::Occupied); },
+                            Some(State::Floor) => {
+                                x_travel = next_x;
+                                y_travel = next_y;
+                            },
+                        }
+                    } else {
+                        return None;
+                    }
+                }
+            })
+    }
+
+    pub fn get_raytraced_adjacent(&self, x: usize, y: usize) -> Adjacent {
+        Adjacent {
+            up: self.trace(x, y, &|(x_now, y_now)| { match y_now == 0 { true => None, false => Some((x_now, y_now - 1)) } }),
+            up_right: self.trace(x, y, &|(x_now, y_now)| { match x_now >= (self.width - 1) || y_now == 0 { true => None, false => Some((x_now + 1, y_now - 1)) } }),
+            right: self.trace(x, y, &|(x_now, y_now)| { match x_now >= (self.width - 1) { true => None, false => Some((x_now + 1, y_now)) } }),
+            down_right: self.trace(x, y, &|(x_now, y_now)| { match x_now >= (self.width - 1) || y_now >= (self.height - 1) { true => None, false => Some((x_now + 1, y_now + 1)) } }),
+            down: self.trace(x, y, &|(x_now, y_now)| { match y_now >= (self.height - 1) { true => None, false => Some((x_now, y_now + 1)) } }),
+            down_left: self.trace(x, y, &|(x_now, y_now)| { match x_now == 0 || y_now >= (self.height - 1) { true => None, false => Some((x_now - 1, y_now + 1)) } }),
+            left: self.trace(x, y, &|(x_now, y_now)| { match x_now == 0 { true => None, false => Some((x_now - 1, y_now)) } }),
+            up_left: self.trace(x, y, &|(x_now, y_now)| { match x_now == 0 || y_now == 0 { true => None, false =>  Some((x_now - 1, y_now - 1)) } }),
+        }
+    }
+
+    pub fn tick_part1(&self) -> Result<Room> {
         let mut coords = vec![];
 
         for y in 0..self.height {
             for x in 0..self.width {
-                let adjacent = self.get_adjacent(x, y);
-                coords.push(adjacent.tick(&self.get(x, y).context("Nothing found")?));
+                let adjacent = self.get_immediately_adjacent(x, y);
+                coords.push(adjacent.tick_part1(&self.get(x, y).context("Nothing found")?));
+            }
+        }
+
+        Ok(Room {
+            coords,
+            width: self.width,
+            height: self.height,
+        })
+    }
+
+    pub fn tick_part2(&self) -> Result<Room> {
+        let mut coords = vec![];
+
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let adjacent = self.get_raytraced_adjacent(x, y);
+                coords.push(adjacent.tick_part2(&self.get(x, y).context("Nothing found")?));
             }
         }
 
@@ -222,7 +291,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rules() {
+    fn test_rules_part1() {
         let input = "L.LL.LL.LL\n\
                            LLLLLLL.LL\n\
                            L.L.L..L..\n\
@@ -236,7 +305,7 @@ mod tests {
 
         let room = Room::from(input);
 
-        let t1 = room.tick().unwrap();
+        let t1 = room.tick_part1().unwrap();
         assert_eq!(format!("{}", t1), "#.##.##.##\n\
                                        #######.##\n\
                                        #.#.#..#..\n\
@@ -248,7 +317,7 @@ mod tests {
                                        #.######.#\n\
                                        #.#####.##");
 
-        let t2 = t1.tick().unwrap();
+        let t2 = t1.tick_part1().unwrap();
         assert_eq!(format!("{}", t2), "#.LL.L#.##\n\
                                        #LLLLLL.L#\n\
                                        L.L.L..L..\n\
@@ -260,7 +329,7 @@ mod tests {
                                        #.LLLLLL.L\n\
                                        #.#LLLL.##");
 
-        let t3 = t2.tick().unwrap();
+        let t3 = t2.tick_part1().unwrap();
         assert_eq!(format!("{}", t3), "#.##.L#.##\n\
                                        #L###LL.L#\n\
                                        L.#.#..#..\n\
@@ -272,7 +341,7 @@ mod tests {
                                        #.LL###L.L\n\
                                        #.#L###.##");
 
-        let t4 = t3.tick().unwrap();
+        let t4 = t3.tick_part1().unwrap();
         assert_eq!(format!("{}", t4), "#.#L.L#.##\n\
                                        #LLL#LL.L#\n\
                                        L.L.L..#..\n\
@@ -284,7 +353,7 @@ mod tests {
                                        #.LLLLLL.L\n\
                                        #.#L#L#.##");
 
-        let t5 = t4.tick().unwrap();
+        let t5 = t4.tick_part1().unwrap();
         assert_eq!(format!("{}", t5), "#.#L.L#.##\n\
                                        #LLL#LL.L#\n\
                                        L.#.L..#..\n\
@@ -296,9 +365,175 @@ mod tests {
                                        #.LLLLLL.L\n\
                                        #.#L#L#.##");
 
-        let t6 = t5.tick().unwrap();
+        let t6 = t5.tick_part1().unwrap();
         assert_eq!(t6, t5);
 
         assert_eq!(t6.count_occupied(), 37);
+    }
+
+    #[test]
+    fn test_raytracer_all_directions() {
+        let input = ".......#.\n\
+                           ...#.....\n\
+                           .#.......\n\
+                           .........\n\
+                           ..#L....#\n\
+                           ....#....\n\
+                           .........\n\
+                           #........\n\
+                           ...#.....";
+
+        let room = Room::from(input);
+        let raytraced = room.get_raytraced_adjacent(3, 4);
+
+        assert_eq!(raytraced, Adjacent {
+            up: Some(State::Occupied),
+            up_right: Some(State::Occupied),
+            right: Some(State::Occupied),
+            down_right: Some(State::Occupied),
+            down: Some(State::Occupied),
+            down_left: Some(State::Occupied),
+            left: Some(State::Occupied),
+            up_left: Some(State::Occupied),
+        })
+    }
+
+    #[test]
+    fn test_raytracer_one_empty() {
+        let input = ".............\n\
+                           .L.L.#.#.#.#.\n\
+                           .............";
+
+        let room = Room::from(input);
+        let raytraced = room.get_raytraced_adjacent(1, 1);
+
+        assert_eq!(raytraced, Adjacent {
+            up: None,
+            up_right: None,
+            right: Some(State::Empty),
+            down_right: None,
+            down: None,
+            down_left: None,
+            left: None,
+            up_left: None,
+        })
+    }
+
+    #[test]
+    fn test_raytracer_no_occupied() {
+        let input = ".##.##.\n\
+                           #.#.#.#\n\
+                           ##...##\n\
+                           ...L...\n\
+                           ##...##\n\
+                           #.#.#.#\n\
+                           .##.##.";
+
+        let room = Room::from(input);
+        let raytraced = room.get_raytraced_adjacent(3, 3);
+
+        assert_eq!(raytraced, Adjacent {
+            up: None,
+            up_right: None,
+            right: None,
+            down_right: None,
+            down: None,
+            down_left: None,
+            left: None,
+            up_left: None,
+        })
+    }
+
+    #[test]
+    fn test_rules_part2() {
+        let input = "L.LL.LL.LL\n\
+                           LLLLLLL.LL\n\
+                           L.L.L..L..\n\
+                           LLLL.LL.LL\n\
+                           L.LL.LL.LL\n\
+                           L.LLLLL.LL\n\
+                           ..L.L.....\n\
+                           LLLLLLLLLL\n\
+                           L.LLLLLL.L\n\
+                           L.LLLLL.LL";
+
+        let room = Room::from(input);
+
+        let t1 = room.tick_part2().unwrap();
+        assert_eq!(format!("{}", t1), "#.##.##.##\n\
+                                       #######.##\n\
+                                       #.#.#..#..\n\
+                                       ####.##.##\n\
+                                       #.##.##.##\n\
+                                       #.#####.##\n\
+                                       ..#.#.....\n\
+                                       ##########\n\
+                                       #.######.#\n\
+                                       #.#####.##");
+
+        let t2 = t1.tick_part2().unwrap();
+        assert_eq!(format!("{}", t2), "#.LL.LL.L#\n\
+                                       #LLLLLL.LL\n\
+                                       L.L.L..L..\n\
+                                       LLLL.LL.LL\n\
+                                       L.LL.LL.LL\n\
+                                       L.LLLLL.LL\n\
+                                       ..L.L.....\n\
+                                       LLLLLLLLL#\n\
+                                       #.LLLLLL.L\n\
+                                       #.LLLLL.L#");
+
+        let t3 = t2.tick_part2().unwrap();
+        assert_eq!(format!("{}", t3), "#.L#.##.L#\n\
+                                       #L#####.LL\n\
+                                       L.#.#..#..\n\
+                                       ##L#.##.##\n\
+                                       #.##.#L.##\n\
+                                       #.#####.#L\n\
+                                       ..#.#.....\n\
+                                       LLL####LL#\n\
+                                       #.L#####.L\n\
+                                       #.L####.L#");
+
+        let t4 = t3.tick_part2().unwrap();
+        assert_eq!(format!("{}", t4), "#.L#.L#.L#\n\
+                                       #LLLLLL.LL\n\
+                                       L.L.L..#..\n\
+                                       ##LL.LL.L#\n\
+                                       L.LL.LL.L#\n\
+                                       #.LLLLL.LL\n\
+                                       ..L.L.....\n\
+                                       LLLLLLLLL#\n\
+                                       #.LLLLL#.L\n\
+                                       #.L#LL#.L#");
+
+        let t5 = t4.tick_part2().unwrap();
+        assert_eq!(format!("{}", t5), "#.L#.L#.L#\n\
+                                       #LLLLLL.LL\n\
+                                       L.L.L..#..\n\
+                                       ##L#.#L.L#\n\
+                                       L.L#.#L.L#\n\
+                                       #.L####.LL\n\
+                                       ..#.#.....\n\
+                                       LLL###LLL#\n\
+                                       #.LLLLL#.L\n\
+                                       #.L#LL#.L#");
+
+        let t6 = t5.tick_part2().unwrap();
+        assert_eq!(format!("{}", t6), "#.L#.L#.L#\n\
+                                       #LLLLLL.LL\n\
+                                       L.L.L..#..\n\
+                                       ##L#.#L.L#\n\
+                                       L.L#.LL.L#\n\
+                                       #.LLLL#.LL\n\
+                                       ..#.L.....\n\
+                                       LLL###LLL#\n\
+                                       #.LLLLL#.L\n\
+                                       #.L#LL#.L#");
+
+        let t7 = t6.tick_part2().unwrap();
+        assert_eq!(t7, t6);
+
+        assert_eq!(t7.count_occupied(), 26);
     }
 }
