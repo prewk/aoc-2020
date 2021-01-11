@@ -15,6 +15,7 @@ pub mod passport;
 pub mod password;
 pub mod seating;
 pub mod xmas;
+pub mod ship;
 
 pub mod day1;
 pub mod day10;
