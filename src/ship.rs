@@ -145,6 +145,43 @@ pub struct Boat2 {
     pos: (i64, i64),
 }
 
+pub fn poor_mans_transpose(waypoint: (i64, i64), dir: RelDir) -> (i64, i64) {
+    match (waypoint.0 < 0, waypoint.1 < 0, dir) {
+        // . . .
+        // . B .
+        // W . .
+        (true, true, RelDir::Left) => (waypoint.1.abs(), waypoint.0.abs()),
+        // . . .
+        // . B .
+        // W . .
+        (true, true, RelDir::Right) => (waypoint.1, waypoint.0.abs()),
+        // W . .
+        // . B .
+        // . . .
+        (true, false, RelDir::Left) => (-1  * waypoint.1, waypoint.0),
+        // W . .
+        // . B .
+        // . . .
+        (true, false, RelDir::Right) => (waypoint.1, waypoint.0.abs()),
+        // . . .
+        // . B .
+        // W . .
+        (false, false, RelDir::Left) => (waypoint.1.abs(), waypoint.0.abs()),
+        // . . .
+        // . B .
+        // W . .
+        (false, false, RelDir::Right) => (waypoint.1, waypoint.0.abs()),
+        // . . .
+        // . B .
+        // . . W
+        (false, true, RelDir::Left) => (waypoint.1.abs(), waypoint.0.abs()),
+        // . . .
+        // . B .
+        // . . W
+        (false, true, RelDir::Right) => (waypoint.1, waypoint.0),
+    }
+}
+
 impl Boat2 {
     pub fn new() -> Boat2 {
         Boat2 {
@@ -167,8 +204,12 @@ impl Boat2 {
             Instruction::West(dist) => {
                 self.waypoint = (self.waypoint.0 - *dist as i64, self.waypoint.1);
             }
-            Instruction::Left(deg) => {}
-            Instruction::Right(deg) => {}
+            Instruction::Left(deg) => {
+                self.waypoint = poor_mans_transpose(self.waypoint, RelDir::Left);
+            }
+            Instruction::Right(deg) => {
+                self.waypoint = poor_mans_transpose(self.waypoint, RelDir::Right);
+            }
             Instruction::Forward(dist) => {
                 let waypoint_real_pos = (self.pos.0 + self.waypoint.0, self.pos.1 + self.waypoint.1);
                 let delta = (waypoint_real_pos.0 - self.pos.0, waypoint_real_pos.1 - self.pos.1);
@@ -177,6 +218,10 @@ impl Boat2 {
             }
         };
     }
+
+    pub fn get_manhattan_dist(&self) -> u64 {
+        (self.pos.0.abs() + self.pos.1.abs()) as u64
+    }
 }
 
 #[cfg(test)]
@@ -184,7 +229,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_boat() {
+    fn test_boat1() {
         let mut b = Boat1::new();
 
         b.tick(&Instruction::from("F10"));
@@ -194,5 +239,30 @@ mod tests {
         b.tick(&Instruction::from("F11"));
 
         assert_eq!(b.get_manhattan_dist(), 25);
+    }
+
+    #[test]
+    fn test_transpose() {
+        assert_eq!(poor_mans_transpose((-2, -4), RelDir::Right), (-4, 2));
+        assert_eq!(poor_mans_transpose((-2, -4), RelDir::Left), (4, 2));
+        assert_eq!(poor_mans_transpose((2, -4), RelDir::Right), (-4, 2));
+        assert_eq!(poor_mans_transpose((2, -4), RelDir::Left), (4, 2));
+        assert_eq!(poor_mans_transpose((-2, -4), RelDir::Right), (-4, 2));
+        assert_eq!(poor_mans_transpose((-2, -4), RelDir::Left), (4, 2));
+        assert_eq!(poor_mans_transpose((-4, 2), RelDir::Right), (2, 4));
+        assert_eq!(poor_mans_transpose((-4, 2), RelDir::Left), (-2, -4));
+    }
+
+    #[test]
+    fn test_boat2() {
+        let mut b = Boat2::new();
+
+        b.tick(&Instruction::from("F10"));
+        b.tick(&Instruction::from("N3"));
+        b.tick(&Instruction::from("F7"));
+        b.tick(&Instruction::from("R90"));
+        b.tick(&Instruction::from("F11"));
+
+        assert_eq!(b.get_manhattan_dist(), 286);
     }
 }
