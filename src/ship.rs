@@ -57,15 +57,15 @@ impl From<&str> for Instruction {
 }
 
 #[derive(Debug)]
-pub struct Boat {
+pub struct Boat1 {
     dir: CompDir,
     pos: (i64, i64),
     trail: Vec<(i64, i64)>,
 }
 
-impl Boat {
-    pub fn new() -> Boat {
-        Boat {
+impl Boat1 {
+    pub fn new() -> Boat1 {
+        Boat1 {
             dir: CompDir::East,
             pos: (0, 0),
             trail: vec![],
@@ -140,13 +140,52 @@ impl Boat {
     }
 }
 
+pub struct Boat2 {
+    waypoint: (i64, i64),
+    pos: (i64, i64),
+}
+
+impl Boat2 {
+    pub fn new() -> Boat2 {
+        Boat2 {
+            waypoint: (10, 1),
+            pos: (0, 0),
+        }
+    }
+
+    pub fn tick(&mut self, instr: &Instruction) {
+        match instr {
+            Instruction::North(dist) => {
+                self.waypoint = (self.waypoint.0, self.waypoint.1 + *dist as i64);
+            }
+            Instruction::South(dist) => {
+                self.waypoint = (self.waypoint.0, self.waypoint.1 - *dist as i64);
+            }
+            Instruction::East(dist) => {
+                self.waypoint = (self.waypoint.0 + *dist as i64, self.waypoint.1);
+            }
+            Instruction::West(dist) => {
+                self.waypoint = (self.waypoint.0 - *dist as i64, self.waypoint.1);
+            }
+            Instruction::Left(deg) => {}
+            Instruction::Right(deg) => {}
+            Instruction::Forward(dist) => {
+                let waypoint_real_pos = (self.pos.0 + self.waypoint.0, self.pos.1 + self.waypoint.1);
+                let delta = (waypoint_real_pos.0 - self.pos.0, waypoint_real_pos.1 - self.pos.1);
+                let mult_delta = (delta.0 * *dist as i64, delta.1 * *dist as i64);
+                self.pos = (self.pos.0 + mult_delta.0, self.pos.1 + mult_delta.1);
+            }
+        };
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_boat() {
-        let mut b = Boat::new();
+        let mut b = Boat1::new();
 
         b.tick(&Instruction::from("F10"));
         b.tick(&Instruction::from("N3"));
