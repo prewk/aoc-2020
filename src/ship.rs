@@ -141,8 +141,8 @@ impl Boat1 {
 }
 
 pub struct Boat2 {
-    waypoint: (i64, i64),
-    pos: (i64, i64),
+    pub waypoint: (i64, i64),
+    pub pos: (i64, i64),
 }
 
 pub fn poor_mans_transpose(waypoint: (i64, i64), dir: RelDir) -> (i64, i64) {
@@ -150,7 +150,7 @@ pub fn poor_mans_transpose(waypoint: (i64, i64), dir: RelDir) -> (i64, i64) {
         // . . .
         // . B .
         // W . .
-        (true, true, RelDir::Left) => (waypoint.1.abs(), waypoint.0.abs()),
+        (true, true, RelDir::Left) => (waypoint.1.abs(), waypoint.0),
         // . . .
         // . B .
         // W . .
@@ -163,14 +163,14 @@ pub fn poor_mans_transpose(waypoint: (i64, i64), dir: RelDir) -> (i64, i64) {
         // . B .
         // . . .
         (true, false, RelDir::Right) => (waypoint.1, waypoint.0.abs()),
-        // . . .
+        // . . W
         // . B .
-        // W . .
-        (false, false, RelDir::Left) => (waypoint.1.abs(), waypoint.0.abs()),
         // . . .
+        (false, false, RelDir::Left) => (-1 * waypoint.1, waypoint.0.abs()),
+        // . . W
         // . B .
-        // W . .
-        (false, false, RelDir::Right) => (waypoint.1, waypoint.0.abs()),
+        // . . .
+        (false, false, RelDir::Right) => (waypoint.1, -1 * waypoint.0),
         // . . .
         // . B .
         // . . W
@@ -178,7 +178,7 @@ pub fn poor_mans_transpose(waypoint: (i64, i64), dir: RelDir) -> (i64, i64) {
         // . . .
         // . B .
         // . . W
-        (false, true, RelDir::Right) => (waypoint.1, waypoint.0),
+        (false, true, RelDir::Right) => (waypoint.1, -1 * waypoint.0),
     }
 }
 
@@ -205,10 +205,22 @@ impl Boat2 {
                 self.waypoint = (self.waypoint.0 - *dist as i64, self.waypoint.1);
             }
             Instruction::Left(deg) => {
-                self.waypoint = poor_mans_transpose(self.waypoint, RelDir::Left);
+                for _ in match deg {
+                    Degree::Deg90 => 0..1,
+                    Degree::Deg180 => 0..2,
+                    Degree::Deg270 => 0..3,
+                } {
+                    self.waypoint = poor_mans_transpose(self.waypoint, RelDir::Left);
+                }
             }
             Instruction::Right(deg) => {
-                self.waypoint = poor_mans_transpose(self.waypoint, RelDir::Right);
+                for _ in match deg {
+                    Degree::Deg90 => 0..1,
+                    Degree::Deg180 => 0..2,
+                    Degree::Deg270 => 0..3,
+                } {
+                    self.waypoint = poor_mans_transpose(self.waypoint, RelDir::Right);
+                }
             }
             Instruction::Forward(dist) => {
                 let waypoint_real_pos = (self.pos.0 + self.waypoint.0, self.pos.1 + self.waypoint.1);
@@ -244,13 +256,23 @@ mod tests {
     #[test]
     fn test_transpose() {
         assert_eq!(poor_mans_transpose((-2, -4), RelDir::Right), (-4, 2));
-        assert_eq!(poor_mans_transpose((-2, -4), RelDir::Left), (4, 2));
-        assert_eq!(poor_mans_transpose((2, -4), RelDir::Right), (-4, 2));
+        assert_eq!(poor_mans_transpose(poor_mans_transpose((-2, -4), RelDir::Right), RelDir::Right), (2, 4));
+        assert_eq!(poor_mans_transpose(poor_mans_transpose(poor_mans_transpose((-2, -4), RelDir::Right), RelDir::Right), RelDir::Right), (4, -2));
+        assert_eq!(poor_mans_transpose((-2, -4), RelDir::Left), (4, -2));
+        assert_eq!(poor_mans_transpose(poor_mans_transpose((-2, -4), RelDir::Left), RelDir::Left), (2, 4));
+        assert_eq!(poor_mans_transpose(poor_mans_transpose(poor_mans_transpose((-2, -4), RelDir::Left), RelDir::Left), RelDir::Left), (-4, 2));
+        assert_eq!(poor_mans_transpose((2, -4), RelDir::Right), (-4, -2));
+        assert_eq!(poor_mans_transpose(poor_mans_transpose((2, -4), RelDir::Right), RelDir::Right), (-2, 4));
+        assert_eq!(poor_mans_transpose(poor_mans_transpose(poor_mans_transpose((2, -4), RelDir::Right), RelDir::Right), RelDir::Right), (4, 2));
         assert_eq!(poor_mans_transpose((2, -4), RelDir::Left), (4, 2));
-        assert_eq!(poor_mans_transpose((-2, -4), RelDir::Right), (-4, 2));
-        assert_eq!(poor_mans_transpose((-2, -4), RelDir::Left), (4, 2));
+        assert_eq!(poor_mans_transpose(poor_mans_transpose((2, -4), RelDir::Left), RelDir::Left), (-2, 4));
+        assert_eq!(poor_mans_transpose(poor_mans_transpose(poor_mans_transpose((2, -4), RelDir::Left), RelDir::Left), RelDir::Left), (-4, -2));
         assert_eq!(poor_mans_transpose((-4, 2), RelDir::Right), (2, 4));
+        assert_eq!(poor_mans_transpose(poor_mans_transpose((-4, 2), RelDir::Right), RelDir::Right), (4, -2));
+        assert_eq!(poor_mans_transpose(poor_mans_transpose(poor_mans_transpose((-4, 2), RelDir::Right), RelDir::Right), RelDir::Right), (-2, -4));
         assert_eq!(poor_mans_transpose((-4, 2), RelDir::Left), (-2, -4));
+        assert_eq!(poor_mans_transpose(poor_mans_transpose((-4, 2), RelDir::Left), RelDir::Left), (4, -2));
+        assert_eq!(poor_mans_transpose(poor_mans_transpose(poor_mans_transpose((-4, 2), RelDir::Left), RelDir::Left), RelDir::Left), (2, 4));
     }
 
     #[test]
