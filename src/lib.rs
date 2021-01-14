@@ -16,6 +16,7 @@ pub mod password;
 pub mod seating;
 pub mod xmas;
 pub mod ship;
+pub mod bus;
 
 pub mod day1;
 pub mod day10;
@@ -29,5 +30,6 @@ pub mod day8;
 pub mod day9;
 pub mod day11;
 pub mod day12;
+pub mod day13;
 
 aoc_lib! { year = 2020 }
