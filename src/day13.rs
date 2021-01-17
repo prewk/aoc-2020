@@ -1,4 +1,4 @@
-use crate::bus::Table;
+use crate::bus::{Table};
 use anyhow::Result;
 
 #[aoc_generator(day13)]
