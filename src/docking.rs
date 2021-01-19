@@ -1,5 +1,5 @@
 use regex::Regex;
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 
 #[derive(Debug, Copy, Clone)]
 pub enum MaskBit {
@@ -64,17 +64,15 @@ impl Mask {
 }
 
 pub struct System {
-    memory: Vec<u64>,
-    dirty: HashSet<usize>,
+    mem_map: HashMap<usize, u64>,
     bitmask: Mask,
 }
 
 impl Clone for System {
     fn clone(&self) -> Self {
         System {
-            memory: self.memory.clone(),
+            mem_map: self.mem_map.clone(),
             bitmask: self.bitmask.clone(),
-            dirty: self.dirty.clone(),
         }
     }
 
@@ -86,9 +84,8 @@ impl Clone for System {
 impl System {
     pub fn new() -> System {
         System {
-            memory: vec![0; 68719476736],
+            mem_map: HashMap::new(),
             bitmask: Mask::from("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X"),
-            dirty: HashSet::new(),
         }
     }
 
@@ -97,15 +94,13 @@ impl System {
     }
 
     pub fn set(&mut self, address: usize, value: u64) {
-        self.memory[address] = self.bitmask.merge(value);
-        self.dirty.insert(address);
+        self.mem_map.insert(address, self.bitmask.merge(value));
     }
 
     pub fn sum(&self) -> u64 {
-        self.dirty
+        self.mem_map
             .iter()
-            .map(|&address| self.memory[address])
-            .fold(0, |acc, val| acc + val)
+            .fold(0, |acc, (_, &value)| acc + value)
     }
 }
 
@@ -156,7 +151,6 @@ mod tests {
                           Instruction::from("mem[7] = 101"),
                           Instruction::from("mem[8] = 0"),
         ] {
-            println!("{:?}", instr);
             match instr {
                 Instruction::SetMask(mask) => {
                     system.set_mask(mask);
