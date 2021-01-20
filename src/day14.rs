@@ -18,7 +18,25 @@ pub fn part1(instructions: &[Instruction]) -> u64 {
                 sys.set_mask(mask.clone());
             }
             Instruction::SetMem(address, value) => {
-                sys.set(*address, *value);
+                sys.set_part1(*address, *value);
+            }
+        }
+    }
+
+    sys.sum()
+}
+
+#[aoc(day14, part2)]
+pub fn part2(instructions: &[Instruction]) -> u64 {
+    let mut sys = System::new();
+
+    for instr in instructions {
+        match instr {
+            Instruction::SetMask(mask) => {
+                sys.set_mask(mask.clone());
+            }
+            Instruction::SetMem(address, value) => {
+                sys.set_part2(*address, *value);
             }
         }
     }
