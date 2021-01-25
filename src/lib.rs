@@ -18,6 +18,7 @@ pub mod xmas;
 pub mod ship;
 pub mod bus;
 pub mod docking;
+pub mod mem_game;
 
 pub mod day1;
 pub mod day10;
@@ -33,5 +34,6 @@ pub mod day11;
 pub mod day12;
 pub mod day13;
 pub mod day14;
+pub mod day15;
 
 aoc_lib! { year = 2020 }
