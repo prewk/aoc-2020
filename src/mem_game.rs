@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 
 #[derive(Debug, PartialOrd, PartialEq, Clone)]
 pub struct Game {
@@ -16,7 +17,7 @@ impl From<&str> for Game {
         Game {
             start_cnt: numbers.len(),
             turn: 0,
-            numbers
+            numbers,
         }
     }
 }

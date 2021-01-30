@@ -9,7 +9,7 @@ pub fn input_generator(input: &str) -> Game {
 pub fn part1(imm_game: &Game) -> Option<usize> {
     let mut game = imm_game.clone();
 
-    for _ in 0..2019 {
+    for _ in 0..(2020 - 1) {
         game.turn();
     }
 
