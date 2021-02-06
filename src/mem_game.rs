@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 #[derive(Debug, PartialOrd, PartialEq, Clone)]
 pub struct Game {
     start_cnt: usize,
